@@ -86,10 +86,14 @@ fig = go.Figure(data=[go.Surface(z=z)])
 
 ## Demo Recording
 
-Link your screen recording here showing:
+Watch the full demo here: [https://youtu.be/Y3XCqwzFXg0](https://youtu.be/Y3XCqwzFXg0)
+
+The video demonstrates:
 - Python static and interactive
 - R static and interactive
-- Optional: 3D chart
+- Python 3D visualization
+- (Optional) R 3D visualization using Plotly
+
 
 ## Repo Notes
 
