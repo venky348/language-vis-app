@@ -2,6 +2,16 @@
 
 This project is a language-agnostic web application that allows users to write and execute custom Python or R code to generate and view static, interactive, and even 3D visualizations — all in the browser.
 
+## Demo Recording
+
+Watch the full demo here: [https://youtu.be/Y3XCqwzFXg0](https://youtu.be/Y3XCqwzFXg0)
+
+The video demonstrates:
+- Python static and interactive
+- R static and interactive
+- Python 3D visualization
+- (Optional) R 3D visualization using Plotly
+
 ## Features
 
 - Supports both Python and R
@@ -84,29 +94,11 @@ z = np.sin(x ** 2 + y ** 2)
 fig = go.Figure(data=[go.Surface(z=z)])
 ```
 
-## Demo Recording
-
-Watch the full demo here: [https://youtu.be/Y3XCqwzFXg0](https://youtu.be/Y3XCqwzFXg0)
-
-The video demonstrates:
-- Python static and interactive
-- R static and interactive
-- Python 3D visualization
-- (Optional) R 3D visualization using Plotly
-
-
 ## Repo Notes
 
 - Output files (.py, .R, .png, .html) are temporarily saved and used for rendering
 - Visualization logic is isolated per language
 - Sandbox execution is implemented securely
-
-## Status: COMPLETE
-
-- All core features
-- All required chart types
-- Fully responsive and styled
-- Clean repo and ready to share
 
 ## Overview of Design and Tools Used
 
