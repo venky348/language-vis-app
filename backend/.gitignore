@@ -1,0 +1,11 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+vis-backend-env/
+
+
+# OS crap
+.DS_Store
