@@ -97,3 +97,43 @@ Link your screen recording here showing:
 - Visualization logic is isolated per language
 - Sandbox execution is implemented securely
 
+## Status: COMPLETE
+
+- All core features
+- All required chart types
+- Fully responsive and styled
+- Clean repo and ready to share
+
+## Overview of Design and Tools Used
+
+This web application was designed to support language-agnostic visualization generation by executing user-submitted code written in either Python or R.
+
+- Frontend: Built using React with custom inline styling. The UI includes a language selector, code editor, generate button, and an embedded output area. A dark/light mode toggle is also included.
+- Backend: Developed using Flask (Python). It exposes a single `/run` endpoint that receives the code and language, dynamically executes it, and returns either an image or an HTML plot depending on the visualization type.
+- Visualization Libraries:
+  - Python: matplotlib for static visualizations and plotly for interactive/3D charts.
+  - R: ggplot2 for static plots and plotly (via htmlwidgets) for interactive charts.
+- Execution Handling: Scripts are written to temporary files, executed using subprocess, and rendered securely. Plot outputs are returned as image files or embedded HTML content.
+- Output Types: Supports both .png and .html renderings inside the frontend iframe or image container.
+
+## Issues Encountered and Resolutions
+
+1. Plotly HTML Response Not Displaying  
+   - Problem: Interactive plots (Python/R) returned HTML, but the React frontend showed “Unsupported response type.”  
+   - Fix: Explicitly checked Content-Type and rendered HTML using `srcDoc` in an iframe.
+
+2. Rscript Not Using Correct Library Path  
+   - Problem: Installed R packages (like `ggplot2`) weren’t found during backend execution.  
+   - Fix: Used `shutil.which("Rscript")` to debug the active path and hardcoded the correct Rscript path in subprocess.
+
+3. Missing Pandoc for R Plotly Export  
+   - Problem: R's `htmlwidgets::saveWidget(..., selfcontained=TRUE)` failed without Pandoc.  
+   - Fix: Installed Pandoc via Homebrew and verified it was accessible in shell.
+
+4. Tailwind Conflicts with React Scripts  
+   - Problem: Tailwind v4 conflicted with `react-scripts` v5, breaking the layout.  
+   - Fix: Downgraded to Tailwind v3 and eventually reverted to plain React + inline styles for better control and simplicity.
+
+5. File Management During Debugging  
+   - Problem: Visualization scripts and images cluttered the working directory during testing.  
+   - Fix: Organized outputs into `scripts/`, `images/`, and `html/` folders with UUID-based filenames. Cleanup was disabled during dev for debugging and re-enabled later.
