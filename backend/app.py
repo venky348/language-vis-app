@@ -3,6 +3,7 @@ from flask_cors import CORS
 import subprocess
 import uuid
 import os
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -19,50 +20,90 @@ def home():
 @app.route('/run', methods=['POST'])
 def run_code():
     data = request.json
-    language = data.get('language')
+    language = data.get('language', '').lower()
     code = data.get('code')
 
-    if language != "python":
-        return jsonify({"error": "Only Python is supported for now"}), 400
-
     file_id = str(uuid.uuid4())
-    script_path = os.path.join("scripts", f"{file_id}.py")
+    script_ext = "py" if language == "python" else "R"
+    script_path = os.path.join("scripts", f"{file_id}.{script_ext}")
     image_path = os.path.join("images", f"{file_id}.png")
     html_path = os.path.join("html", f"{file_id}.html")
 
+    print(f"Language: {language}")
     print(f"Script path: {script_path}")
     print(f"Image path: {image_path}")
     print(f"HTML path: {html_path}")
+    print("🔍 Rscript being used:", shutil.which("Rscript"))
 
     try:
-        if "plotly" in code:
-            code += f"\n\nimport plotly.io as pio\npio.write_html(fig, file='{html_path}', auto_open=False)"
-            with open(script_path, "w") as f:
-                f.write(code)
+        # ------------------------ Python Handling ------------------------
+        if language == "python":
+            if "plotly" in code:
+                code += f"\n\nimport plotly.io as pio\npio.write_html(fig, file='{html_path}', auto_open=False)"
+                with open(script_path, "w") as f:
+                    f.write(code)
 
-            result = subprocess.run(["python", script_path], capture_output=True, text=True)
-            print("=== STDOUT ===\n", result.stdout)
-            print("=== STDERR ===\n", result.stderr)
-            result.check_returncode()
+                result = subprocess.run(["python", script_path], capture_output=True, text=True)
+                print("=== PY STDOUT ===\n", result.stdout)
+                print("=== PY STDERR ===\n", result.stderr)
+                result.check_returncode()
 
-            with open(html_path, "r") as f:
-                html_content = f.read()
-            response = make_response(html_content)
-            response.headers["Content-Type"] = "text/html; charset=utf-8"
-            print("✅ Returning HTML with correct content-type")
-            return response
+                with open(html_path, "r") as f:
+                    html_content = f.read()
+                response = make_response(html_content)
+                response.headers["Content-Type"] = "text/html; charset=utf-8"
+                return response
+
+            else:
+                code += f"\n\nimport matplotlib.pyplot as plt\nplt.savefig('{image_path}')"
+                with open(script_path, "w") as f:
+                    f.write(code)
+
+                result = subprocess.run(["python", script_path], capture_output=True, text=True)
+                print("=== PY STDOUT ===\n", result.stdout)
+                print("=== PY STDERR ===\n", result.stderr)
+                result.check_returncode()
+
+                return send_file(image_path, mimetype="image/png")
+
+        # ------------------------ R Handling ------------------------
+        elif language == "r":
+            if "plotly" in code.lower():
+                code += f"""
+htmlwidgets::saveWidget(fig, file="{html_path}", selfcontained = TRUE)
+"""
+                with open(script_path, "w") as f:
+                    f.write(code)
+
+                result = subprocess.run(["/usr/local/bin/Rscript", script_path], capture_output=True, text=True)
+                print("=== R STDOUT ===\n", result.stdout)
+                print("=== R STDERR ===\n", result.stderr)
+                result.check_returncode()
+
+                with open(html_path, "r") as f:
+                    html_content = f.read()
+                response = make_response(html_content)
+                response.headers["Content-Type"] = "text/html; charset=utf-8"
+                return response
+
+            else:
+                code = f"""
+png("{image_path}")
+{code}
+dev.off()
+"""
+                with open(script_path, "w") as f:
+                    f.write(code)
+
+                result = subprocess.run(["/usr/local/bin/Rscript", script_path], capture_output=True, text=True)
+                print("=== R STDOUT ===\n", result.stdout)
+                print("=== R STDERR ===\n", result.stderr)
+                result.check_returncode()
+
+                return send_file(image_path, mimetype="image/png")
 
         else:
-            code += f"\n\nimport matplotlib.pyplot as plt\nplt.savefig('{image_path}')"
-            with open(script_path, "w") as f:
-                f.write(code)
-
-            result = subprocess.run(["python", script_path], capture_output=True, text=True)
-            print("=== STDOUT ===\n", result.stdout)
-            print("=== STDERR ===\n", result.stderr)
-            result.check_returncode()
-
-            return send_file(image_path, mimetype="image/png")
+            return jsonify({"error": "Unsupported language"}), 400
 
     except subprocess.CalledProcessError as e:
         print("❌ Execution failed")
@@ -70,12 +111,6 @@ def run_code():
             "error": "Execution failed",
             "details": e.stderr if hasattr(e, "stderr") else str(e)
         }), 500
-
-    # finally:
-    #     for folder, ext in [("scripts", ".py"), ("images", ".png"), ("html", ".html")]:
-    #         temp_file = os.path.join(folder, f"{file_id}{ext}")
-    #         if os.path.exists(temp_file):
-    #             os.remove(temp_file)
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)

@@ -55,7 +55,7 @@ function App() {
           Language:
           <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{ marginLeft: '0.5rem' }}>
             <option value="python">Python</option>
-            <option value="r" disabled>R (coming soon)</option>
+            <option value="r">R</option>
           </select>
         </label>
       </div>
