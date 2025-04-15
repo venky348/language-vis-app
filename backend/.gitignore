@@ -9,3 +9,7 @@ vis-backend-env/
 
 # OS crap
 .DS_Store
+
+scripts/
+images/
+html/
